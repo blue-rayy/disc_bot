@@ -1,0 +1,21 @@
+[debug] System config: []
+[debug] User config: []
+[debug] Custom config: []
+[debug] Command-line args: ['--print-traffic', '--restrict-filenames', '-v', 'https://www.youtube.com/watch?v=tZ4ZsUf3QEU']
+[debug] Encodings: locale cp1252, fs mbcs, out cp1252, pref cp1252
+[debug] youtube-dl version 2024.12.17 [d55d1f423] (single file build)
+[debug] ** This version was built from the latest master code at https://github.com/ytdl-org/youtube-dl.
+[debug] ** For support, visit the main site.
+[debug] Python 3.4.4 (CPython AMD64 32bit) - Windows-10-10.0.19041 - OpenSSL 1.0.2d 9 Jul 2015
+[debug] exe versions: none
+[debug] Proxy map: {}
+[youtube] tZ4ZsUf3QEU: Downloading webpage
+[youtube] tZ4ZsUf3QEU: Downloading API JSON
+[debug] [youtube] Extracting signature function js_03dbdfab_103
+[debug] [youtube] Decrypted nsig EOcgrPSVfzFZNpKxw => y3wTqWKz35vRIQ
+[debug] [youtube] Decrypted nsig QaQ5Y8tXmh6t9fnhX => lUIjrJoiF9qoUg
+[debug] [youtube] Extracting signature function js_03dbdfab_107
+[debug] Default format spec: best/bestvideo+bestaudio
+[debug] Invoking downloader on 'https://rr1---sn-p5qs7nzk.googlevideo.com/videoplayback?sig=AJfQdSswRAIgU80Lrv3C2Iguxlh19hL-tZKORkeoipT4YnEz8VCCM4ACIAUMWz49g0VbLIc_hUenIfGE5rHIckUk6DeB1BZvTOIN&mv=m&mn=sn-p5qs7nzk%2Csn-5ualdnls&requiressl=yes&itag=18&pl=29&xtags=heaudio%3Dtrue&expire=1734539660&met=1734518060%2C&mvi=1&vprv=1&mime=video%2Fmp4&ns=stAMW8ZXWdhCtBQg22WT5D4Q&n=y3wTqWKz35vRIQ&initcwndbps=3110000&svpuc=1&rqh=1&rms=au%2Cau&dur=493.331&id=o-AEY86vae3SpEMi18Fp2V87lK7nY6X7_DZ4diF5igqCKF&bui=AfMhrI98mTQVKUvmMnV5XLbgr9eECygvSwP7tZRfpmRwrei20wLD-cq_Bj7x7oGLNG5mS3k1-QZ2h2ju&sefc=1&xpc=EgVo2aDSNQ%3D%3D&ip=2601%3A5cf%3A4082%3Aa6b0%3A6ca5%3Aa8a4%3A1d66%3Aad21&mh=GC&mt=1734517757&ratebypass=yes&cnr=14&lmt=1708172829959641&lsig=AGluJ3MwRAIgGXn4RZKOTj7VpmBhULRCgIJe4LU-LkbGvH3x7BrZpHgCICUeyAjKYpgsThT56YbVLFs1Y6VkbylFayliJ6yaxsSi&lsparams=met%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&ei=LKViZ4yZKtq2kucPk5CFeA&c=MWEB&mm=31%2C26&fexp=51326932%2C51331020%2C51335594%2C51371293&fvip=3&source=youtube&ms=au%2Conr&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cvprv%2Csvpuc%2Cxtags%2Cmime%2Cns%2Crqh%2Ccnr%2Cratebypass%2Cdur%2Clmt&txp=5538434'
+[download] Starboy_x_I_Feel_It_Coming-tZ4ZsUf3QEU.mp4 has already been downloaded
+[download] 100% of 3.97MiB
