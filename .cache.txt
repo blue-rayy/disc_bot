@@ -92,3 +92,12 @@ cF1Na4AIecM ./assets/sound/Sabrina_Carpenter_-_Please_Please_Please_Official_Vid
 hT_nvWreIhg ./assets/sound/OneRepublic_-_Counting_Stars-[hT_nvWreIhg].webm
 OPf0YbXqDm0 ./assets/sound/Mark_Ronson_-_Uptown_Funk_Official_Video_ft._Bruno_Mars-[OPf0YbXqDm0].webm
 CRrf3h9vhp8 ./assets/sound/Olivia_Rodrigo_-_traitor_Official_Video-[CRrf3h9vhp8].webm
+LxVV_gptm64 ./assets/sound/tame_impala_-_borderline_slowed-[LxVV_gptm64].webm
+aO5GSr4Dq34 ./assets/sound/Let_It_Happen_Slowed_Pitched_Down_-_Tame_Impala-[aO5GSr4Dq34].webm
+0kwnImJsRJk ./assets/sound/All_I_Need-[0kwnImJsRJk].webm
+Sw120IXPv2Y ./assets/sound/LE_SSERAFIM_CRAZY_MUSIC_AUDIO-[Sw120IXPv2Y].webm
+AdBzzpq3xV4 ./assets/sound/Lady_Gaga_Bruno_Mars_-_Die_With_A_Smile-[AdBzzpq3xV4].webm
+FToPYkPUvYU ./assets/sound/talk_to_me_boy-[FToPYkPUvYU].webm
+vKPZCA3YTFw ./assets/sound/michael_jackson_-_heaven_can_wait_sped_up-[vKPZCA3YTFw].webm
+8gV4cgf-enU ./assets/sound/Michael_Jackson_-_Chicago_sped_up-[8gV4cgf-enU].webm
+LsT3etnkRAY ./assets/sound/Spacial_Background_Music_Short_Video_Free_Music-[LsT3etnkRAY].webm
