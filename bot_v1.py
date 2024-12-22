@@ -1,12 +1,13 @@
 import discord, os, yt_dlp, asyncio, re, socket, glob
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
+
 from utils.extractor import YTDLSource
 
 load_dotenv()
 
 PRIV = os.getenv("DISCORD_TOKEN")
-FFMPEG = os.getenv("ffmpeg")
+FFMPEG = os.getenv("FFMPEG")
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -183,10 +184,13 @@ async def play(ctx):
 
     if not filename:
         filename = await YTDLSource.from_url(url=yt_url.group(1), loop=bot.loop)
+    else:
+        print("Cache hit!")
+    # filename = await YTDLSource.from_url(url=yt_url.group(1), loop=bot.loop)
 
-    print(filename)
-    open(filename, "r")
+    # print(filename)
     vclient.play(discord.FFmpegPCMAudio(executable=FFMPEG, source=filename))
+    # vclient.play(discord.FFmpegPCMAudio(filename))
 
 
 @bot.command()
@@ -199,7 +203,7 @@ async def stop(ctx):
         return
 
     if vclient.is_playing():
-        await vclient.stop()
+        vclient.stop()
         await msg.channel.send("Song stopped.")
     else:
         await msg.channel.send("No song playing to stop.")
