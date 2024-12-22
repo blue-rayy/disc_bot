@@ -1,6 +1,7 @@
-import discord, os, yt_dlp, asyncio, re, socket
+import discord, os, yt_dlp, asyncio, re, socket, glob
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
+from utils.extractor import YTDLSource
 
 load_dotenv()
 
@@ -13,58 +14,58 @@ intents.message_content = True
 
 # sg = "./fousey.jpg"
 # sen = discord.File(open(sg, "rb"), sg)
+cache = {}
 
 
-yt_dlp.utils.bug_reports_message = lambda: ""
+def update_cache():
+    try:
+        archive_file = open(".archive.txt", "r")
+    except:
+        print("No archive file")
+        return
 
-ytdl_format_options = {
-    "format": "bestaudio/best",
-    "restrictfilenames": True,
-    "noplaylist": False,
-    # "nopart": True,
-    # "nocheckcertificate": True,
-    # "ignoreerrors": False,
-    # "logtostderr": False,
-    # "quiet": True,
-    # "no_warnings": True,
-    # "default_search": "auto",
-    # "source_address": socket.gethostbyname(
-    #     socket.gethostname()
-    # ),  # bind to ipv4 since ipv6 addresses cause issues sometimes
-    # "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "paths": {"home": "./assets/sound/"},
-    "download_archive": ".archive.txt",
-    # "cookies": "./utils/cookies.txt",
-    # "dump_user_agent": True,
-    # "dump_json": True,
-    # "verbose": True,
-    # "print_traffic": True,
-}
-ffmpeg_options = {"options": "-vn"}
+    current_files = glob.glob("./assets/sound/*.webm")
+    cache_file = open(".cache.txt", "w")
 
-ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
+    for archive in archive_file:
+        for file in current_files:
+            yt_code = archive.removesuffix("\n").split(" ")[1]
+            file_code = (
+                re.search(r"\[.*\.webm", file)
+                .group(0)
+                .removeprefix("[")
+                .removesuffix("].webm")
+                .removesuffix("\n")
+            )
+
+            if yt_code == file_code:
+                cache_string = yt_code + " " + file.replace("\\", "/") + "\n"
+                if cache_file.write(cache_string) != len(cache_string):
+                    print("Cache file error")
+
+    archive_file.close()
+    cache_file.close()
 
 
-class YTDLSource(discord.PCMVolumeTransformer):
+def load_cache():
+    global cache
+    try:
+        cache_file = open(".cache.txt", "r")
+    except:
+        print("Cache file not found")
+        return
 
-    def __init__(self, source, *, data, volume=0.1):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get("title")
-        self.url = ""
+    for line in cache_file:
+        cache_line = line.split(" ")
+        yt_code = cache_line[0]
+        file_name = cache_line[1].removesuffix("\n")
 
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(
-            None, lambda: ytdl.extract_info(url, download=not stream)
-        )
-        if "entries" in data and len(data["entries"]) != 0:
-            # take first item from a playlist
-            data = data["entries"][0]
+        cache[yt_code] = file_name
 
-        filename = data["title"] if stream else ytdl.prepare_filename(data)
-        return filename
+
+def init_cache():
+    update_cache()
+    load_cache()
 
 
 # TODO:
@@ -150,7 +151,8 @@ async def kys(ctx):
 
 @bot.command()
 async def play(ctx):
-    global vclient
+    global vclient, cache
+
     message = ctx.message
     msg = message.content
     vchannel = message.author.voice or None
@@ -165,17 +167,25 @@ async def play(ctx):
 
     youtube_pattern = r"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
     yt_url = re.search(youtube_pattern, msg)
+
     if not yt_url:
         await message.channel.send(
-            "Could not find your youtube link. Try using a different link or just ping ray"
+            "Could not find your youtube link. Try using a different link or ping ray to fix it"
         )
         return
 
-    filename = await YTDLSource.from_url(url=yt_url.group(1), loop=bot.loop)
+    yt_code = re.search(r"v=.*\&|v=.*", yt_url.group(1)).group(0).removeprefix("v=")
 
-    # for i in range(0, yt_url.endpos):
-    print(yt_url.group(1))
+    if yt_code.find("&") != -1:
+        yt_code = yt_code.split("&")[0]
 
+    filename = cache[yt_code]
+
+    if not filename:
+        filename = await YTDLSource.from_url(url=yt_url.group(1), loop=bot.loop)
+
+    print(filename)
+    open(filename, "r")
     vclient.play(discord.FFmpegPCMAudio(executable=FFMPEG, source=filename))
 
 
@@ -224,4 +234,5 @@ async def show(ctx):
 
 
 if __name__ == "__main__":
+    init_cache()
     bot.run(PRIV)
