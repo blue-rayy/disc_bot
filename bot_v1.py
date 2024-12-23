@@ -1,4 +1,4 @@
-import discord, os, yt_dlp, asyncio, re, socket, glob
+import discord, os, yt_dlp, asyncio, re, socket, glob, concurrent.futures
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
 
@@ -8,6 +8,7 @@ load_dotenv()
 
 PRIV = os.getenv("DISCORD_TOKEN")
 FFMPEG = os.getenv("FFMPEG")
+APP_ID = os.getenv("APP_ID")
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -93,9 +94,13 @@ def queue_insert(queue_num, yt_link):
 
 def queue_remove(song_num):
     global queue
-    # queue.remove(queue[int(song_num) - 1])
     queue[int(song_num) - 1] = "Removed"
     queue.remove("Removed")
+
+
+def queue_pop():
+    global queue
+    return queue.pop(0)
 
 
 def queue_clear():
@@ -135,7 +140,7 @@ async def get_file(yt_url):
         filename = cache[yt_code]
         print("Cache hit!")
     except:
-        filename = await YTDLSource.from_url(url=yt_url, loop=bot.loop)
+        filename = await YTDLSource.from_url(url=yt_url, loop=bot.loop, stream=True)
         cache_add(yt_code, filename)
 
     return filename
@@ -157,6 +162,7 @@ bot = commands.Bot(
     command_prefix="!",
     intents=intents,
     activity=discord.CustomActivity("straight up jorkin it"),
+    application_id=APP_ID,
 )
 
 vclient = None
@@ -165,8 +171,12 @@ vclient = None
 def play_next(error):
     global queue
     # try:
+    # vclient.play(
+    #     discord.FFmpegPCMAudio(executable=FFMPEG, source=queue[1][1]), after=play_next
+    # )
     vclient.play(
-        discord.FFmpegPCMAudio(executable=FFMPEG, source=queue[1][1]), after=play_next
+        queue_pop()[0],
+        after=play_next,
     )
 
     # fut = asyncio.run_coroutine_threadsafe(
@@ -269,15 +279,22 @@ async def play(ctx):
         )
         return
 
-    filename = await get_file(yt_url.group(1))
+    # filename = await get_file(yt_url.group(1))
 
-    queue_add(yt_url.group(1), filename)
+    queue_add(yt_url.group(1))
+    # player = await YTDLSource.from_url(yt_url.group(1), loop=bot.loop, stream=True)
+
+    # vclient.play(player)
+    player = await YTDLSource.from_url(yt_url.group(1), loop=bot.loop, stream=True)
+
+    await message.channel.send("Now playing... \n" + queue_pop()[0])
+    ctx.voice_client.play(player, after=play_next)
 
     # vclient.play(discord.FFmpegPCMAudio(executable=FFMPEG, source=filename))
-    vclient.play(
-        discord.FFmpegPCMAudio(executable=FFMPEG, source=filename),
-        after=play_next,
-    )
+    # vclient.play(
+    #     discord.FFmpegPCMAudio(executable=FFMPEG, source=filename),
+    #     after=play_next,
+    # )
 
 
 @bot.command()
@@ -319,8 +336,20 @@ async def add(ctx):
     command_args = msg.split()
 
     if len(command_args) == 2:
-        filename = await get_file(command_args[1])
-        queue_add(command_args[1], filename)
+
+        # filename = await get_file(command_args[1])
+        # queue_add(command_args[1], filename)
+        player = await YTDLSource.from_url(command_args[1], loop=bot.loop, stream=True)
+        queue_add(command_args[1], player)
+
+        # filename = await asyncio.gather(asyncio.to_thread(get_file, command_args[1]))
+        # filename = await asyncio.gather(
+        #     asyncio.to_thread(
+        #         asyncio.run_coroutine_threadsafe, (get_file(command_args[1])), bot.loop
+        #     )
+        # )
+        # print(filename[0].result())
+        # queue_add(command_args[1], filename[0].result())
     else:
         await message.channel.send("Please only add one song at a time.")
         return
@@ -366,6 +395,11 @@ async def remove(ctx):
 @bot.command()
 async def show(ctx):
     await ctx.message.channel.send(queue_print())
+
+
+@bot.event
+async def on_ready():
+    await bot.tree.sync()
 
 
 if __name__ == "__main__":
