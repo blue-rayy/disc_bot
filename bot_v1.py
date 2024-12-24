@@ -14,8 +14,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 
-# sg = "./fousey.jpg"
-# sen = discord.File(open(sg, "rb"), sg)
 cache = {}
 queue = []
 
@@ -79,28 +77,46 @@ def init_cache():
     load_cache()
 
 
-def queue_add(yt_link, filename=None):
+def queue_add(yt_link, title=None, requester=None, requester_id=None, user=None):
     global queue
-    if not filename:
-        queue.append([yt_link])
-    else:
-        queue.append([yt_link, filename])
+    queue.append([yt_link, title, requester, requester_id, user])
+
+
+def queue_update_info(yt_link, title):
+    global queue
+    try:
+        for song in queue:
+            if song[0] == yt_link:
+                song[1] = title
+    except:
+        pass
 
 
 def queue_insert(queue_num, yt_link):
     global queue
-    queue.insert(int(queue_num) - 1, [yt_link])
+    try:
+        queue.insert(int(queue_num) - 1, [yt_link])
+        return True
+    except:
+        return False
 
 
 def queue_remove(song_num):
     global queue
-    queue[int(song_num) - 1] = "Removed"
-    queue.remove("Removed")
+    try:
+        queue[int(song_num) - 1] = "Removed"
+        queue.remove("Removed")
+        return True
+    except:
+        return False
 
 
 def queue_pop():
     global queue
-    return queue.pop(0)
+    try:
+        return queue.pop(0)
+    except:
+        return None
 
 
 def queue_clear():
@@ -108,17 +124,41 @@ def queue_clear():
     queue.clear()
 
 
-def queue_print():
+def queue_next():
     global queue
+    try:
+        return queue[0]
+    except:
+        return None
+
+
+def queue_len():
+    global queue
+    return len(queue)
+
+
+def queue_print(amount):
+    global queue
+    string_builder = ""
+
     if len(queue) == 0:
         return "Queue empty"
 
-    string_builder = ""
     count = 1
 
     for song in queue:
-        # print(count + ": " + song)
-        string_builder += str(count) + ": " + song[0] + "\n"
+        if vclient:
+            requestor = song[4].nick or song[2]
+            if vclient.is_playing() and count == 1:
+                string_builder += (
+                    "1: " + song[0] + " (Currently playing) [" + requestor + "]\n"
+                )
+            else:
+                string_builder += str(count) + ": " + song[0] + " [" + requestor + "]\n"
+        if count == amount:
+            if queue_len() - count > 0:
+                string_builder += str(queue_len() - count) + " songs not listed..."
+            break
         count += 1
 
     return string_builder
@@ -140,22 +180,22 @@ async def get_file(yt_url):
         filename = cache[yt_code]
         print("Cache hit!")
     except:
-        filename = await YTDLSource.from_url(url=yt_url, loop=bot.loop, stream=True)
-        cache_add(yt_code, filename)
+        filename = await YTDLSource.from_url(url=yt_url, loop=bot.loop, stream=True)[0]
+        # cache_add(yt_code, filename)
 
     return filename
 
 
 """ TODO:
     V1 List
-  2. add song queue
-  3. Fix stuttering issue when downloading a song at the same time as a song is playing
-  4. finish adding all song related commands
-  5. Add help page to each command
-  6. Refactor to not use vclient global variable as it is shared between different servers
 
   COMPLETE:
   1. add cache for already downloaded songs by reading archive file and mapping each id to its filename to be returned in the from_url function
+  2. add song queue
+  3. Fix stuttering issue when downloading a song at the same time as a song is playing (GIVEN UP ON, 
+        SWITCHED TO STREAMING) Maybe bc it uses same socket to stream from and download info??
+  4. finish adding all song related commands
+  5. Add help page to each command
 """
 
 bot = commands.Bot(
@@ -168,28 +208,87 @@ bot = commands.Bot(
 vclient = None
 
 
-def play_next(error):
-    global queue
-    # try:
-    # vclient.play(
-    #     discord.FFmpegPCMAudio(executable=FFMPEG, source=queue[1][1]), after=play_next
-    # )
-    vclient.play(
-        queue_pop()[0],
-        after=play_next,
+async def play_next_async(ctx):
+    if not queue_pop():
+        await ctx.send("No more songs in queue")
+        return
+
+    next_song = queue_next()
+
+    if not queue_next():
+        await ctx.send("No more songs in queue")
+        return
+
+    status = await ctx.send("Loading next song")
+
+    player = await YTDLSource.from_url(url=next_song[0], loop=bot.loop, stream=True)
+
+    await status.edit(
+        discord.utils.remove_markdown(
+            "Now playing: \n"
+            + player[1]["title"]
+            + "\n"
+            + next_song[0]
+            + "\nRequested by: <@"
+            + str(next_song[3])
+            + ">"
+        ),
+        suppress=True,
     )
 
-    # fut = asyncio.run_coroutine_threadsafe(
-    #     vclient.play(
-    #         discord.FFmpegPCMAudio(executable=FFMPEG, source=queue[1][1]),
-    #         after=play_next(),
-    #     ),
-    #     bot.loop,
-    # )
+    queue_update_info(next_song[0], player[1]["title"])
 
-    # fut.result()
-    # except (Exception e):
-    #     print("what the fuck")
+    vclient.play(
+        player[0],
+        after=lambda e, ctx=ctx: play_next(ctx=ctx, error=e),
+    )
+
+
+def play_next(ctx, error):
+    if not queue_pop():
+        fut_message = asyncio.run_coroutine_threadsafe(
+            ctx.send("No more songs in queue"), bot.loop
+        )
+        return fut_message.result()
+
+    next_song = queue_next()
+
+    if not queue_next():
+        fut_message = asyncio.run_coroutine_threadsafe(
+            ctx.send("No more songs in queue"), bot.loop
+        )
+        return fut_message.result()
+
+    status = asyncio.run_coroutine_threadsafe(ctx.send("Loading next song"), bot.loop)
+    status = status.result()
+
+    fut_player = asyncio.run_coroutine_threadsafe(
+        YTDLSource.from_url(url=next_song[0], loop=bot.loop, stream=True), bot.loop
+    )
+    player = fut_player.result()
+
+    asyncio.run_coroutine_threadsafe(
+        status.edit(
+            discord.utils.remove_markdown(
+                "Now playing: \n"
+                + player[1]["title"]
+                + "\n"
+                + queue_next()[0]
+                + "\nRequested by: <@"
+                + str(queue_next()[3])
+                + ">"
+            ),
+            suppress=True,
+        ),
+        bot.loop,
+    ).result()
+
+    queue_update_info(next_song[0], player[1]["title"])
+
+    vclient.play(
+        player[0],
+        after=lambda e, ctx=ctx: play_next(ctx=ctx, error=e),
+    )
 
 
 @bot.event
@@ -200,7 +299,7 @@ async def on_message(message):
     sender = message.author.name
     vchannel = message.author.voice or None
 
-    if msg.startswith("hi bot"):
+    if msg.startswith("whos home"):
         if sender == "bluuray":
             if vclient != None:
                 # filename = await YTDLSource.from_url(
@@ -209,18 +308,19 @@ async def on_message(message):
 
                 filename = await YTDLSource.from_url(
                     url="https://www.youtube.com/watch?v=uMGyPutPoOk", loop=bot.loop
-                )
+                )[0]
 
                 vclient.play(discord.FFmpegPCMAudio(executable=FFMPEG, source=filename))
 
-                # await message.channel.send(yt_url.group(1))
             else:
                 await message.channel.send("omg hi ray :)")
         else:
             await message.channel.send("ew. :skull:")
 
 
-@bot.command()
+@bot.command(
+    name="summon", aliases=["sum", "su", "summ", "summo"], help="this shouldnt be here"
+)
 async def joinme(ctx):
     global vclient
     vchannel = ctx.message.author.voice or None
@@ -239,22 +339,32 @@ async def joinme(ctx):
 #     )
 
 
-@bot.command()
+@bot.command(name="kys", aliases=["die", "bye", "q"], help="only for ray :)")
 async def kys(ctx):
     global vclient
-    if ctx.message.author.name == "bluuray":
-        await ctx.message.channel.send(":((")
+    if await bot.is_owner(ctx.author):
+        await ctx.send(":((")
         if vclient:
             if vclient.is_playing():
+                queue_clear()
                 vclient.stop()
             await vclient.disconnect()
         await bot.close()
         return
     else:
-        await ctx.message.channel.send("hehe nah :stuck_out_tongue:")
+        file = open("./assets/image/fousey.jpg", "rb")
+        sen = discord.File(file, "./assets/image/fousey.jpg")
+        await ctx.send("hehe nah :stuck_out_tongue:", file=sen)
+        file.close()
 
 
-@bot.command()
+@bot.command(
+    name="play",
+    aliases=["pl", "pla", "start"],
+    help="Plays first song in queue if no link is given and nothing is paused or playing at the moment."
+    + "Otherwise, will start playing song in youtube link. If something is being played and a link is given, song"
+    + "will be added to queue instead.\nUsages:\n   !play [youtube_link]\n   !play",
+)
 async def play(ctx):
     global vclient
     message = ctx.message
@@ -271,34 +381,74 @@ async def play(ctx):
         vclient.resume()
         return
 
-    yt_url = await get_ytlink(msg)
+    if (
+        not vclient.is_paused()
+        and not vclient.is_playing()
+        and queue_next()
+        and len(msg.split()) == 1
+    ):
+        yt_url = queue_next()[0]
+    else:
+        yt_url = await get_ytlink(msg)
 
-    if not yt_url:
+        if not yt_url:
+            await message.channel.send(
+                "Could not find your youtube link. Try using a different link or ping ray to fix it"
+            )
+            return
+
+        yt_url = yt_url.group(1)
+        queue_add(
+            yt_url,
+            requester=message.author.name,
+            requester_id=message.author.id,
+            user=message.author,
+        )
+
+    if vclient.is_playing() and len(msg.split()) == 1:
+        await message.channel.send("Something is currently being played.")
+        return
+
+    elif vclient.is_playing() and len(msg.split()) != 1:
         await message.channel.send(
-            "Could not find your youtube link. Try using a different link or ping ray to fix it"
+            "Something is currently being played. Requested song has been added to queue."
         )
         return
 
-    # filename = await get_file(yt_url.group(1))
+    status = await message.channel.send("Loading song...")
 
-    queue_add(yt_url.group(1))
-    # player = await YTDLSource.from_url(yt_url.group(1), loop=bot.loop, stream=True)
+    async with ctx.typing():
+        player = await YTDLSource.from_url(yt_url, loop=bot.loop, stream=True)
 
-    # vclient.play(player)
-    player = await YTDLSource.from_url(yt_url.group(1), loop=bot.loop, stream=True)
+    await status.edit(
+        content=(
+            discord.utils.remove_markdown(
+                "Now playing: \n"
+                + player[1]["title"]
+                + "\n"
+                + queue_next()[0]
+                + "\nRequested by: <@"
+                + str(queue_next()[3])
+                + ">"
+            ),
+        ),
+        suppress=True,
+    )
 
-    await message.channel.send("Now playing... \n" + queue_pop()[0])
-    ctx.voice_client.play(player, after=play_next)
+    queue_update_info(yt_url, player[1]["title"])
 
-    # vclient.play(discord.FFmpegPCMAudio(executable=FFMPEG, source=filename))
-    # vclient.play(
-    #     discord.FFmpegPCMAudio(executable=FFMPEG, source=filename),
-    #     after=play_next,
-    # )
+    ctx.voice_client.play(
+        player[0],
+        after=lambda e, ctx=ctx: play_next(error=e, ctx=ctx),
+    )
 
 
-@bot.command()
-async def stop(ctx):
+@bot.command(
+    name="skip",
+    aliases=["sk", "ski", "next", "nex", "ne", "n"],
+    help="Skips current song\nUsages:\n     !skip",
+)
+async def skip(ctx):
     global vclient
     msg = ctx.message
 
@@ -306,14 +456,22 @@ async def stop(ctx):
         await msg.channel.send("You're not in a voice channel..")
         return
 
-    if vclient.is_playing():
-        vclient.stop()
-        await msg.channel.send("Song stopped.")
+    if queue_next():
+        if vclient.is_playing() or vclient.is_paused():
+            await ctx.message.add_reaction("⏭")
+            # await msg.channel.send("Song skipped.")
+            vclient.stop()
+
+        # await play_next_async(ctx=ctx)
     else:
-        await msg.channel.send("No song playing to stop.")
+        await msg.channel.send("No song to skip.")
 
 
-@bot.command()
+@bot.command(
+    name="pause",
+    aliases=["pa", "pau", "paus"],
+    help="Pauses current song.\nUsages:\n   !pause",
+)
 async def pause(ctx):
     global vclient
     msg = ctx.message
@@ -324,77 +482,195 @@ async def pause(ctx):
 
     if vclient.is_playing():
         vclient.pause()
-        await msg.channel.send("Song paused.")
+        await ctx.message.add_reaction("⏸")
+        # await msg.channel.send("Song paused.")
     else:
         await msg.channel.send("No song playing to pause.")
 
 
-@bot.command()
+@bot.command(
+    name="resume",
+    aliases=["res", "resu", "resum"],
+    help="Resumes the song if it was paused.\nUsages:\n     !resume",
+)
+async def resume(ctx):
+    global vclient
+    msg = ctx.message
+
+    if not vclient:
+        await msg.channel.send("You're not in a voice channel..")
+        return
+
+    if vclient.is_paused():
+        vclient.resume()
+        await ctx.message.add_reaction("⏯")
+        # await msg.channel.send("Song resumed.")
+    else:
+        await msg.channel.send("No song to resume.")
+
+
+@bot.command(
+    name="add",
+    aliases=["a", "ad"],
+    help="Adds a song link to the end of the queue."
+    + " Will start playing song added is the first song to be added to the queue.\nUsages:\n     !add [youtube_link]",
+)
 async def add(ctx):
+    global vclient
     message = ctx.message
+    vchannel = message.author.voice or None
     msg = ctx.message.content
     command_args = msg.split()
 
+    yt_link = await get_ytlink(command_args[1])
+    yt_link = yt_link.group(1)
+
     if len(command_args) == 2:
+        queue_add(
+            yt_link,
+            requester=message.author.name,
+            requester_id=message.author.id,
+            user=message.author,
+        )
+        await ctx.message.add_reaction("✅")
 
-        # filename = await get_file(command_args[1])
-        # queue_add(command_args[1], filename)
-        player = await YTDLSource.from_url(command_args[1], loop=bot.loop, stream=True)
-        queue_add(command_args[1], player)
+        if queue_len() == 1:
+            if vchannel:
+                if not vclient:
+                    vclient = await vchannel.channel.connect(self_deaf=True)
 
-        # filename = await asyncio.gather(asyncio.to_thread(get_file, command_args[1]))
-        # filename = await asyncio.gather(
-        #     asyncio.to_thread(
-        #         asyncio.run_coroutine_threadsafe, (get_file(command_args[1])), bot.loop
-        #     )
-        # )
-        # print(filename[0].result())
-        # queue_add(command_args[1], filename[0].result())
+                status = await message.channel.send("Loading song...")
+
+                async with ctx.typing():
+                    player = await YTDLSource.from_url(
+                        queue_next()[0], loop=bot.loop, stream=True
+                    )
+
+                await status.edit(
+                    content=(
+                        discord.utils.remove_markdown(
+                            "Now playing: \n"
+                            + player[1]["title"]
+                            + "\n"
+                            + queue_next()[0]
+                            + "\nRequested by: <@"
+                            + str(queue_next()[3])
+                            + ">"
+                        )
+                    ),
+                    suppress=True,
+                )
+
+                queue_update_info(queue_next()[0], player[1]["title"])
+
+                ctx.voice_client.play(
+                    player[0],
+                    after=lambda e, ctx=ctx: play_next(error=e, ctx=ctx),
+                )
+
+            else:
+                await message.channel.send(
+                    "Send the !play command to start the music once you join a voice channel"
+                )
+        return
+
     else:
         await message.channel.send("Please only add one song at a time.")
         return
 
-    # if vclient.is_playing():
-    # asyncio.run_coroutine_threadsafe(get_file(command_args[1]), bot.loop)
-    # await get_file(command_args[1])
 
-
-@bot.command()
+@bot.command(
+    name="insert",
+    aliases=["in", "ins", "inse", "inser"],
+    help="Inserts a song to the position given in the queue (ie '!insert youtube_link 2' will shift all songs after 2 down one and the given youtube_link"
+    + "will become the new second song in queue).\nUsage:\n    !insert [youtube_link] [queue_position]",
+)
 async def insert(ctx):
     message = ctx.message
     msg = ctx.message.content
     command_args = msg.split()
 
     if len(command_args) == 3:
-        queue_insert(command_args[2], command_args[1])
+        if queue_insert(command_args[2], command_args[1]):
+            await ctx.message.add_reaction("✅")
+        else:
+            await ctx.message.add_reaction("❌")
+            await ctx.send(
+                "Something went wrong when trying to insert your song. Make sure the position you're giving exists in the queue :)"
+            )
     else:
         await message.channel.send(
             "Please add what position you'd like the song to be inserted at.\nExample: !insert [yt_link] [song_num]"
         )
 
 
-@bot.command()
+@bot.command(
+    name="clear_queue",
+    help="Clears the entire queue. As in, deletes it. Dont use this if you have no reason to.\nUsages:\n    !clear_queue",
+)
 async def clear(ctx):
     queue_clear()
 
 
-@bot.command()
+@bot.command(
+    name="remove",
+    aliases=["rem", "remo", "remov"],
+    help="Removes the song at the given queue position.\nUsages:\n     !remove [queue_position_number]",
+)
 async def remove(ctx):
     message = ctx.message
     msg = ctx.message.content
     command_args = msg.split()
 
     if len(command_args) == 2:
-        queue_remove(command_args[1])
+        if queue_remove(command_args[1]):
+            await ctx.message.add_reaction("✅")
+        else:
+            await ctx.message.add_reaction("❌")
+            await ctx.send(
+                "Something went wrong when trying to remove your song. Make sure the position you're giving exists in the queue :)"
+            )
     else:
         await message.channel.send(
             "Please specify which song you'd like to remove by typing the song number in the queue.\nExample: !remove [song_num]"
         )
 
 
-@bot.command()
+@bot.command(
+    name="show",
+    aliases=["sh", "sho", "list", "ls", "queue"],
+    help="Lists out the first 25 songs in queue.\nUsages:\n     !show",
+)
 async def show(ctx):
-    await ctx.message.channel.send(queue_print())
+    await ctx.message.channel.send(queue_print(25), suppress_embeds=True)
+
+
+@bot.command(
+    name="show_all",
+    help="Lists out all the songs in queue.\nUsages:\n      !show_all",
+)
+async def show(ctx):
+    await ctx.message.channel.send(queue_print(9999), suppress_embeds=True)
+
+
+@bot.command(
+    name="song",
+    aliases=["current", "so", "son", "wtf"],
+    help="Prints the current song being played.\nUsages:\n      !song",
+)
+async def current_song(ctx):
+    await ctx.message.channel.send(
+        discord.utils.remove_markdown(
+            "Currently playing: \n"
+            + queue_next()[1]
+            + "\n"
+            + queue_next()[0]
+            + "\nRequested by: <@"
+            + str(queue_next()[3])
+            + ">"
+        ),
+        suppress_embeds=True,
+    )
 
 
 @bot.event
