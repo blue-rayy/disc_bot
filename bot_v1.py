@@ -199,7 +199,7 @@ async def get_file(yt_url):
 """
 
 bot = commands.Bot(
-    command_prefix="!",
+    command_prefix="#",
     intents=intents,
     activity=discord.CustomActivity("straight up jorkin it"),
     application_id=APP_ID,
@@ -298,8 +298,10 @@ async def on_message(message):
     msg = message.content
     sender = message.author.name
     vchannel = message.author.voice or None
+    if msg.startswith("welcome back bot") or msg.startswith("welcome back robot"):
+        await message.channel.send("hi")
 
-    if msg.startswith("whos home"):
+    if msg.startswith("hi robot") or msg.startswith("hi bot"):
         if sender == "bluuray":
             if vclient != None:
                 # filename = await YTDLSource.from_url(
