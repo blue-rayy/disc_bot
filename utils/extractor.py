@@ -23,7 +23,7 @@ ytdl_format_options = {
     # ),  # bind to ipv4 since ipv6 addresses cause issues sometimes
     # "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     "paths": {"home": "./assets/sound/"},
-    "download_archive": ".archive.txt",
+    # "download_archive": ".archive.txt",
     # "cookies": "./utils/cookies.txt",
     # "dump_user_agent": True,
     # "dump_json": True,

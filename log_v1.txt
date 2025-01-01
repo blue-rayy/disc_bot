@@ -1,2 +1,91 @@
-[2024-12-24 08:59:44] [INFO    ] discord.client: logging in using static token
-[2024-12-24 08:59:45] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: d3a987e5ccad1cd88862831c543cade1).
+[2024-12-30 14:30:52] [INFO    ] discord.client: logging in using static token
+[2024-12-30 14:30:52] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: 8d1b223141ebc04874cde79347af3491).
+[2024-12-30 14:35:17] [ERROR   ] discord.ext.commands.bot: Ignoring exception in command None
+discord.ext.commands.errors.CommandNotFound: Command "joinme" is not found
+[2024-12-30 14:35:29] [INFO    ] discord.voice_state: Connecting to voice...
+[2024-12-30 14:35:29] [INFO    ] discord.voice_state: Starting voice handshake... (connection attempt 1)
+[2024-12-30 14:35:29] [INFO    ] discord.voice_state: Voice handshake complete. Endpoint found: us-east1718.discord.media
+[2024-12-30 14:35:29] [INFO    ] discord.voice_state: Voice connection complete.
+[youtube] Extracting URL: https://www.youtube.com/watch?v=uMGyPutPoOk
+[youtube] uMGyPutPoOk: Downloading webpage
+[youtube] uMGyPutPoOk: Downloading ios player API JSON
+[youtube] uMGyPutPoOk: Downloading mweb player API JSON
+[youtube] uMGyPutPoOk: Downloading m3u8 information
+[info] uMGyPutPoOk: Downloading 1 format(s): 251
+[download] Destination: assets\sound\Roblox_hi_sound.-[uMGyPutPoOk].webm
+[download]   7.9% of   12.62KiB at  902.39KiB/s ETA 00:00[download]  23.8% of   12.62KiB at    1.97MiB/s ETA 00:00[download]  55.4% of   12.62KiB at    3.80MiB/s ETA 00:00[download] 100.0% of   12.62KiB at    5.66MiB/s ETA 00:00[download] 100% of   12.62KiB in 00:00:00 at 101.28KiB/s 
+[2024-12-30 14:35:45] [ERROR   ] discord.client: Ignoring exception in on_message
+Traceback (most recent call last):
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\Rayan\Desktop\yup_stuff\coding_stuff\learn\discord_bot\bot_v1.py", line 312, in on_message
+    discord.FFmpegPCMAudio(executable=FFMPEG, source=filename[0])
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\site-packages\discord\player.py", line 345, in __init__
+    super().__init__(source, executable=executable, args=args, **subprocess_kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\site-packages\discord\player.py", line 182, in __init__
+    self._process = self._spawn_process(args, **kwargs)
+                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\site-packages\discord\player.py", line 205, in _spawn_process
+    process = subprocess.Popen(args, creationflags=CREATE_NO_WINDOW, **subprocess_kwargs)
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1036, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1472, in _execute_child
+    args = list2cmdline(args)
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 614, in list2cmdline
+    for arg in map(os.fsdecode, seq):
+               ~~~^^^^^^^^^^^^^^^^^^
+  File "<frozen os>", line 861, in fsdecode
+TypeError: expected str, bytes or os.PathLike object, not YTDLSource
+[2024-12-30 14:35:45] [INFO    ] discord.player: ffmpeg process 78192 has not terminated. Waiting to terminate...
+[2024-12-30 14:35:45] [INFO    ] discord.player: ffmpeg process 78192 should have terminated with a return code of 1.
+[download] uMGyPutPoOk: has already been recorded in the archive
+[2024-12-30 14:36:46] [ERROR   ] discord.client: Ignoring exception in on_message
+Traceback (most recent call last):
+  File "C:\Users\Rayan\AppData\Local\Programs\Python\Python313\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\Rayan\Desktop\yup_stuff\coding_stuff\learn\discord_bot\bot_v1.py", line 307, in on_message
+    filename = await YTDLSource.from_url(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        url="https://www.youtube.com/watch?v=uMGyPutPoOk", loop=bot.loop
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Rayan\Desktop\yup_stuff\coding_stuff\learn\discord_bot\utils\extractor.py", line 57, in from_url
+    if "entries" in data:
+       ^^^^^^^^^^^^^^^^^
+TypeError: argument of type 'NoneType' is not iterable
+[2024-12-30 14:37:15] [INFO    ] discord.voice_state: Disconnected from voice by force... potentially reconnecting.
+[2024-12-30 14:37:15] [INFO    ] discord.voice_state: The voice handshake is being terminated for Channel ID 719946903940235298 (Guild ID 719946903424598107)
+[2024-12-30 14:37:15] [INFO    ] discord.voice_state: Reconnect was unsuccessful, disconnecting from voice normally...
+[2024-12-30 15:01:29] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-30 16:33:05] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-30 19:09:33] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-30 22:34:59] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-31 01:20:35] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-31 05:15:32] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 8d1b223141ebc04874cde79347af3491.
+[2024-12-31 13:02:45] [WARNING ] discord.gateway: Shard ID None has stopped responding to the gateway. Closing and restarting.
+[2024-12-31 13:02:45] [INFO    ] discord.gateway: Shard ID None session has been invalidated.
+[2024-12-31 13:02:50] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: ed34cfff3096a54c8008341fc79e51f0).
+[2024-12-31 15:15:17] [WARNING ] discord.gateway: Shard ID None has stopped responding to the gateway. Closing and restarting.
+[2024-12-31 15:15:17] [INFO    ] discord.gateway: Shard ID None session has been invalidated.
+[2024-12-31 15:15:22] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: 9b073cd51833fcef9920c784be05f1c1).
+[2024-12-31 15:58:38] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 17:26:48] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 17:53:26] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 19:23:45] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 19:49:31] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 22:55:50] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2024-12-31 23:18:41] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2025-01-01 01:57:54] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2025-01-01 03:38:56] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.
+[2025-01-01 04:26:51] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 9b073cd51833fcef9920c784be05f1c1.

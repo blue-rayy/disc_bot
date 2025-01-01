@@ -1,8 +1,11 @@
-import discord, os, yt_dlp, asyncio, re, socket, glob, concurrent.futures
+import discord, os, yt_dlp, asyncio, re, socket, glob, concurrent.futures, sys
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
 
+sys.path.append("..")
 from utils.extractor import YTDLSource
+from utils.signal_handler import *
+
 
 load_dotenv()
 
@@ -53,7 +56,7 @@ def load_cache():
     try:
         cache_file = open(".cache.txt", "r")
     except:
-        print("Cache file not found")
+        print("No cache file")
         return
 
     for line in cache_file:
@@ -187,15 +190,15 @@ async def get_file(yt_url):
 
 
 """ TODO:
-    V1 List
+        V1.5 List
+    1. signal handler
+    2. organize functions to seperate classes and files 
+    3. clean shit up and actually document your code
+    4. move bot hosting to sray and fix linux issues
+    5. add timeout so bot leaves vc by itself after some time without being used
+    6. add remind me command
 
   COMPLETE:
-  1. add cache for already downloaded songs by reading archive file and mapping each id to its filename to be returned in the from_url function
-  2. add song queue
-  3. Fix stuttering issue when downloading a song at the same time as a song is playing (GIVEN UP ON, 
-        SWITCHED TO STREAMING) Maybe bc it uses same socket to stream from and download info??
-  4. finish adding all song related commands
-  5. Add help page to each command
 """
 
 bot = commands.Bot(
@@ -307,7 +310,7 @@ async def on_message(message):
                 filename = await YTDLSource.from_url(
                     url="https://www.youtube.com/watch?v=uMGyPutPoOk", loop=bot.loop
                 )
-
+                print(filename[0])
                 vclient.play(
                     discord.FFmpegPCMAudio(executable=FFMPEG, source=filename[0])
                 )
@@ -349,6 +352,32 @@ async def kys(ctx):
         sen = discord.File(file, "./assets/image/fousey.jpg")
         await ctx.send("hehe nah :stuck_out_tongue:", file=sen)
         file.close()
+
+
+def _kill_yourself():
+    global vclient
+    if vclient:
+        if vclient.is_playing():
+            queue_clear()
+            vclient.stop()
+        fut_disconnent = asyncio.run_coroutine_threadsafe(
+            vclient.disconnect(), bot.loop
+        )
+        fut_disconnent.result()
+
+        fut_close = asyncio.run_coroutine_threadsafe(bot, bot.loop)
+
+        fut_close.result()
+
+async def _kill_yourself_async():
+    global vclient
+    if vclient:
+        if vclient.is_playing():
+            queue_clear()
+            vclient.stop()
+            await vclient.disconnect()
+
+    await bot.close()
 
 
 @bot.command(
@@ -673,7 +702,10 @@ async def current_song(ctx):
 async def on_ready():
     await bot.tree.sync()
 
+async def main():
+    if __name__ == "__main__":
+        init_cache()
+        init_signals(SIGINT=_kill_yourself_async, loop=bot.loop)
+        bot.run(PRIV)
 
-if __name__ == "__main__":
-    init_cache()
-    bot.run(PRIV)
+asyncio.run(main())
